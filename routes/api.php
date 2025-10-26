@@ -56,4 +56,28 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('permission:users.delete')->group(function () {
         Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
     });
+
+
+    // Categories Routes
+    Route::middleware('permission:categories.view')->group(function () {
+        Route::get('/categories', [CategoryController::class, 'index']);
+        Route::get('/categories/trashed', [CategoryController::class, 'trashed']);
+        Route::get('/categories/{id}', [CategoryController::class, 'show']);
+    });
+
+    Route::middleware('permission:categories.create')->group(function () {
+        Route::post('/categories', [CategoryController::class, 'store']);
+    });
+
+    Route::middleware('permission:categories.edit')->group(function () {
+        Route::put('/categories/{id}', [CategoryController::class, 'update']);
+        Route::post('/categories/{id}/toggle-active', [CategoryController::class, 'toggleActive']);
+        Route::post('/categories/{id}/restore', [CategoryController::class, 'restore']);
+    });
+
+    Route::middleware('permission:categories.delete')->group(function () {
+        Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+        Route::delete('/categories/{id}/force', [CategoryController::class, 'forceDestroy']);
+    });
+
 });
