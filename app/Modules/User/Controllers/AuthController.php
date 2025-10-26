@@ -18,21 +18,24 @@ class AuthController extends Controller
      * تسجيل مستخدم جديد
      */
     public function register(RegisterRequest $request)
-    {
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+{
+    $user = User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+    ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+    // إعطاء دور customer بشكل افتراضي
+    $user->assignRole('customer');
 
-        return $this->successResponse([
-            'user' => $user,
-            'token' => $token,
-            'token_type' => 'Bearer'
-        ], 'User registered successfully', 201);
-    }
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+    return $this->successResponse([
+        'user' => $user,
+        'token' => $token,
+        'token_type' => 'Bearer'
+    ], 'User registered successfully', 201);
+}
 
     /**
      * تسجيل الدخول
