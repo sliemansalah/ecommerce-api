@@ -80,4 +80,30 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/categories/{id}/force', [CategoryController::class, 'forceDestroy']);
     });
 
+
+     // Products Routes
+    Route::middleware('permission:products.view')->group(function () {
+        Route::get('/products', [ProductController::class, 'index']);
+        Route::get('/products/{id}', [ProductController::class, 'show']);
+    });
+
+    Route::middleware('permission:products.create')->group(function () {
+        Route::post('/products', [ProductController::class, 'store']);
+    });
+
+    Route::middleware('permission:products.edit')->group(function () {
+        Route::put('/products/{id}', [ProductController::class, 'update']);
+        Route::post('/products/{id}/toggle-active', [ProductController::class, 'toggleActive']);
+        Route::post('/products/{id}/toggle-featured', [ProductController::class, 'toggleFeatured']);
+        Route::post('/products/{id}/update-stock', [ProductController::class, 'updateStock']);
+        Route::post('/products/{id}/images', [ProductController::class, 'addImages']);
+        Route::delete('/products/{productId}/images/{imageId}', [ProductController::class, 'deleteImage']);
+        Route::post('/products/{productId}/images/{imageId}/set-primary', [ProductController::class, 'setPrimaryImage']);
+    });
+
+    Route::middleware('permission:products.delete')->group(function () {
+        Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+    });
+    
+
 });
