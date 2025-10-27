@@ -1,134 +1,247 @@
 <!-- resources/js/views/roles/RolesView.vue -->
 <template>
     <dashboard-layout>
-        <v-container fluid>
+        <v-container fluid class="pa-6">
             <!-- Header -->
-            <v-row class="mb-4">
-                <v-col cols="12" md="6">
-                    <h1 class="text-h4 font-weight-bold">إدارة الأدوار</h1>
-                    <p class="text-subtitle-1 text-medium-emphasis">
-                        إدارة أدوار النظام والصلاحيات
-                    </p>
-                </v-col>
-                <v-col cols="12" md="6" class="text-md-end">
-                    <v-btn
-                        color="primary"
-                        prepend-icon="mdi-plus"
-                        @click="openCreateDialog"
-                    >
-                        إضافة دور جديد
-                    </v-btn>
+            <v-row class="mb-6">
+                <v-col cols="12">
+                    <div class="d-flex align-center justify-space-between mb-4">
+                        <div>
+                            <h1 class="text-h4 font-weight-bold mb-2">
+                                <v-icon icon="mdi-shield-account" class="me-2" color="primary"></v-icon>
+                                إدارة الأدوار والصلاحيات
+                            </h1>
+                            <p class="text-subtitle-1 text-medium-emphasis mb-0">
+                                إدارة أدوار النظام والصلاحيات المرتبطة بها
+                            </p>
+                        </div>
+                        <v-btn
+                            color="primary"
+                            size="large"
+                            prepend-icon="mdi-plus"
+                            @click="openCreateDialog"
+                            elevation="2"
+                        >
+                            إضافة دور جديد
+                        </v-btn>
+                    </div>
                 </v-col>
             </v-row>
 
-            <!-- Search -->
-            <v-card class="mb-4">
+            <!-- Search & Filters Card -->
+            <v-card class="mb-6" elevation="2">
                 <v-card-text>
-                    <v-text-field
-                        v-model="search"
-                        prepend-inner-icon="mdi-magnify"
-                        label="البحث في الأدوار"
-                        placeholder="ابحث عن دور..."
-                        variant="outlined"
-                        density="comfortable"
-                        clearable
-                        hide-details
-                    ></v-text-field>
+                    <v-row align="center">
+                        <!-- البحث -->
+                        <v-col cols="12" md="6">
+                            <v-text-field
+                                v-model="searchQuery"
+                                prepend-inner-icon="mdi-magnify"
+                                label="البحث في الأدوار"
+                                placeholder="ابحث عن دور..."
+                                variant="outlined"
+                                density="comfortable"
+                                clearable
+                                hide-details
+                                @keyup.enter="applySearch"
+                            ></v-text-field>
+                        </v-col>
+
+                        <!-- عدد العناصر في الصفحة -->
+                        <v-col cols="12" md="3">
+                            <v-select
+                                v-model="perPage"
+                                :items="[5, 10, 25, 50]"
+                                label="العناصر"
+                                variant="outlined"
+                                density="comfortable"
+                                hide-details
+                                prepend-inner-icon="mdi-table-row"
+                                @update:model-value="changePerPage"
+                            ></v-select>
+                        </v-col>
+
+                        <!-- الترتيب -->
+                        <v-col cols="12" md="3">
+                            <v-btn-toggle
+                                v-model="sortOrder"
+                                mandatory
+                                divided
+                                density="comfortable"
+                                @update:model-value="applyFilters"
+                            >
+                                <v-btn value="desc">
+                                    <v-icon>mdi-sort-descending</v-icon>
+                                </v-btn>
+                                <v-btn value="asc">
+                                    <v-icon>mdi-sort-ascending</v-icon>
+                                </v-btn>
+                            </v-btn-toggle>
+                        </v-col>
+                    </v-row>
                 </v-card-text>
             </v-card>
 
-            <!-- Roles Table -->
-            <v-card>
-                <v-data-table
-                    :headers="headers"
-                    :items="roleStore.roles"
-                    :search="search"
-                    :loading="roleStore.loading"
-                    loading-text="جاري تحميل البيانات..."
-                    no-data-text="لا يوجد أدوار"
-                    items-per-page-text="عدد الصفوف في الصفحة:"
-                    class="elevation-0"
-                >
-                    <!-- Role Name Column -->
-                    <template v-slot:item.name="{ item }">
-                        <div class="d-flex align-center">
-                            <v-avatar color="primary" variant="tonal" class="me-3">
-                                <v-icon icon="mdi-shield-account"></v-icon>
-                            </v-avatar>
-                            <div>
-                                <div class="font-weight-bold text-h6">{{ item.name }}</div>
-                                <div class="text-caption text-medium-emphasis">
-                                    {{ item.permissions?.length || 0 }} صلاحية
+            <!-- Roles Table Card -->
+            <v-card elevation="2">
+                <v-card-text class="pa-0">
+                    <v-data-table-server
+                        :headers="headers"
+                        :items="roleStore.roles"
+                        :items-length="roleStore.pagination.total"
+                        :loading="roleStore.loading"
+                        :items-per-page="roleStore.pagination.perPage"
+                        :page="roleStore.pagination.currentPage"
+                        @update:page="loadPage"
+                        loading-text="جاري تحميل البيانات..."
+                        no-data-text="لا يوجد أدوار"
+                        items-per-page-text="عدد الصفوف في الصفحة:"
+                        class="elevation-0"
+                        hover
+                    >
+                        <!-- Role Name Column -->
+                        <template v-slot:item.name="{ item }">
+                            <div class="d-flex align-center py-4">
+                                <v-avatar 
+                                    :color="getRoleColor(item.name)" 
+                                    size="48"
+                                    class="me-4"
+                                    variant="tonal"
+                                >
+                                    <v-icon icon="mdi-shield-account" size="24"></v-icon>
+                                </v-avatar>
+                                <div>
+                                    <div class="font-weight-bold text-body-1">
+                                        {{ formatRoleName(item.name) }}
+                                    </div>
+                                    <div class="text-caption text-medium-emphasis">
+                                        <v-icon icon="mdi-key" size="14" class="me-1"></v-icon>
+                                        {{ item.permissions?.length || 0 }} صلاحية
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </template>
+                        </template>
 
-                    <!-- Users Count Column -->
-                    <template v-slot:item.users_count="{ item }">
-                        <v-chip
-                            size="small"
-                            color="info"
-                            variant="tonal"
-                        >
-                            <v-icon start size="small">mdi-account-multiple</v-icon>
-                            {{ item.users_count || 0 }} مستخدم
-                        </v-chip>
-                    </template>
-
-                    <!-- Permissions Column -->
-                    <template v-slot:item.permissions="{ item }">
-                        <div class="d-flex flex-wrap ga-1">
+                        <!-- Users Count Column -->
+                        <template v-slot:item.users_count="{ item }">
                             <v-chip
-                                v-for="permission in item.permissions?.slice(0, 3)"
-                                :key="permission.id"
-                                size="small"
-                                color="success"
+                                :color="item.users_count > 0 ? 'info' : 'grey'"
+                                size="default"
                                 variant="tonal"
+                                prepend-icon="mdi-account-multiple"
                             >
-                                {{ formatPermissionName(permission.name) }}
+                                {{ item.users_count || 0 }} مستخدم
                             </v-chip>
-                            <v-chip
-                                v-if="item.permissions?.length > 3"
-                                size="small"
-                                color="grey"
-                                variant="tonal"
-                            >
-                                +{{ item.permissions.length - 3 }} أخرى
-                            </v-chip>
-                        </div>
-                        <span v-if="!item.permissions || item.permissions.length === 0" class="text-medium-emphasis">
-                            لا يوجد صلاحيات
-                        </span>
-                    </template>
+                        </template>
 
-                    <!-- Actions Column -->
-                    <template v-slot:item.actions="{ item }">
-                        <v-btn
-                            icon="mdi-eye"
-                            variant="text"
-                            size="small"
-                            color="info"
-                            @click="viewRolePermissions(item)"
-                        ></v-btn>
-                        <v-btn
-                            icon="mdi-pencil"
-                            variant="text"
-                            size="small"
-                            color="primary"
-                            @click="openEditDialog(item)"
-                            :disabled="isSystemRole(item.name)"
-                        ></v-btn>
-                        <v-btn
-                            icon="mdi-delete"
-                            variant="text"
-                            size="small"
-                            color="error"
-                            @click="openDeleteDialog(item)"
-                            :disabled="isSystemRole(item.name)"
-                        ></v-btn>
-                    </template>
-                </v-data-table>
+                        <!-- Permissions Column -->
+                        <template v-slot:item.permissions="{ item }">
+                            <div class="py-2">
+                                <div v-if="item.permissions && item.permissions.length > 0" class="d-flex flex-wrap ga-1">
+                                    <v-chip
+                                        v-for="permission in item.permissions.slice(0, 4)"
+                                        :key="permission.id"
+                                        size="small"
+                                        color="success"
+                                        variant="flat"
+                                        class="text-caption"
+                                    >
+                                        {{ formatPermissionName(permission.name) }}
+                                    </v-chip>
+                                    <v-chip
+                                        v-if="item.permissions.length > 4"
+                                        size="small"
+                                        color="grey-darken-1"
+                                        variant="flat"
+                                        class="text-caption"
+                                    >
+                                        +{{ item.permissions.length - 4 }}
+                                    </v-chip>
+                                </div>
+                                <span v-else class="text-medium-emphasis text-caption">
+                                    لا يوجد صلاحيات
+                                </span>
+                            </div>
+                        </template>
+
+                        <!-- System Role Badge -->
+                        <template v-slot:item.system="{ item }">
+                            <v-chip
+                                v-if="isSystemRole(item.name)"
+                                color="warning"
+                                size="small"
+                                variant="tonal"
+                                prepend-icon="mdi-shield-lock"
+                            >
+                                محمي
+                            </v-chip>
+                        </template>
+
+                        <!-- Actions Column -->
+                        <template v-slot:item.actions="{ item }">
+                            <div class="d-flex ga-1">
+                                <v-tooltip text="عرض الصلاحيات" location="top">
+                                    <template v-slot:activator="{ props }">
+                                        <v-btn
+                                            v-bind="props"
+                                            icon="mdi-eye"
+                                            variant="text"
+                                            size="small"
+                                            color="info"
+                                            @click="viewRolePermissions(item)"
+                                        ></v-btn>
+                                    </template>
+                                </v-tooltip>
+
+                                <v-tooltip text="تعديل" location="top">
+                                    <template v-slot:activator="{ props }">
+                                        <v-btn
+                                            v-bind="props"
+                                            icon="mdi-pencil"
+                                            variant="text"
+                                            size="small"
+                                            color="primary"
+                                            :disabled="isSystemRole(item.name)"
+                                            @click="openEditDialog(item)"
+                                        ></v-btn>
+                                    </template>
+                                </v-tooltip>
+
+                                <v-tooltip text="حذف" location="top">
+                                    <template v-slot:activator="{ props }">
+                                        <v-btn
+                                            v-bind="props"
+                                            icon="mdi-delete"
+                                            variant="text"
+                                            size="small"
+                                            color="error"
+                                            :disabled="isSystemRole(item.name)"
+                                            @click="openDeleteDialog(item)"
+                                        ></v-btn>
+                                    </template>
+                                </v-tooltip>
+                            </div>
+                        </template>
+
+                        <!-- Bottom Pagination -->
+                        <template v-slot:bottom>
+                            <div class="d-flex align-center justify-space-between pa-4">
+                                <div class="text-caption text-medium-emphasis">
+                                    عرض {{ roleStore.pagination.from }} إلى {{ roleStore.pagination.to }} 
+                                    من أصل {{ roleStore.pagination.total }} دور
+                                </div>
+                                
+                                <v-pagination
+                                    v-model="currentPage"
+                                    :length="roleStore.pagination.lastPage"
+                                    :total-visible="7"
+                                    @update:model-value="loadPage"
+                                    rounded="circle"
+                                ></v-pagination>
+                            </div>
+                        </template>
+                    </v-data-table-server>
+                </v-card-text>
             </v-card>
 
             <!-- Role Dialog (Create/Edit) -->
@@ -147,13 +260,13 @@
             />
 
             <!-- View Permissions Dialog -->
-            <v-dialog
-                v-model="viewDialog"
-                max-width="600px"
-            >
+            <v-dialog v-model="viewDialog" max-width="700px">
                 <v-card v-if="selectedRole">
-                    <v-card-title class="d-flex align-center justify-space-between bg-primary">
-                        <span class="text-white">صلاحيات: {{ selectedRole.name }}</span>
+                    <v-card-title class="d-flex align-center justify-space-between bg-primary pa-4">
+                        <div class="d-flex align-center">
+                            <v-icon icon="mdi-shield-account" class="me-2" color="white"></v-icon>
+                            <span class="text-h6 text-white">{{ formatRoleName(selectedRole.name) }}</span>
+                        </div>
                         <v-btn
                             icon="mdi-close"
                             variant="text"
@@ -163,33 +276,50 @@
                     </v-card-title>
 
                     <v-card-text class="pt-6">
-                        <v-alert type="info" variant="tonal" class="mb-4">
-                            <div class="d-flex align-center">
-                                <v-icon icon="mdi-account-multiple" class="me-3"></v-icon>
-                                <div>
-                                    <strong>عدد المستخدمين:</strong> {{ selectedRole.users_count || 0 }}
-                                </div>
-                            </div>
-                        </v-alert>
+                        <!-- Stats -->
+                        <v-row class="mb-4">
+                            <v-col cols="6">
+                                <v-card variant="tonal" color="info">
+                                    <v-card-text class="text-center">
+                                        <v-icon icon="mdi-account-multiple" size="32" class="mb-2"></v-icon>
+                                        <div class="text-h5 font-weight-bold">{{ selectedRole.users_count || 0 }}</div>
+                                        <div class="text-caption">مستخدم</div>
+                                    </v-card-text>
+                                </v-card>
+                            </v-col>
+                            <v-col cols="6">
+                                <v-card variant="tonal" color="success">
+                                    <v-card-text class="text-center">
+                                        <v-icon icon="mdi-key" size="32" class="mb-2"></v-icon>
+                                        <div class="text-h5 font-weight-bold">{{ selectedRole.permissions?.length || 0 }}</div>
+                                        <div class="text-caption">صلاحية</div>
+                                    </v-card-text>
+                                </v-card>
+                            </v-col>
+                        </v-row>
 
-                        <h3 class="text-h6 mb-3">الصلاحيات ({{ selectedRole.permissions?.length || 0 }}):</h3>
+                        <v-divider class="mb-4"></v-divider>
+
+                        <!-- Permissions List -->
+                        <h3 class="text-h6 mb-3">الصلاحيات:</h3>
                         
-                        <v-chip-group column>
-                            <v-chip
-                                v-for="permission in selectedRole.permissions"
-                                :key="permission.id"
-                                color="success"
-                                variant="tonal"
-                                prepend-icon="mdi-check-circle"
-                            >
-                                {{ formatPermissionName(permission.name) }}
-                            </v-chip>
-                        </v-chip-group>
+                        <div v-if="selectedRole.permissions && selectedRole.permissions.length > 0">
+                            <v-chip-group column>
+                                <v-chip
+                                    v-for="permission in selectedRole.permissions"
+                                    :key="permission.id"
+                                    color="success"
+                                    variant="tonal"
+                                    prepend-icon="mdi-check-circle"
+                                >
+                                    {{ formatPermissionName(permission.name) }}
+                                </v-chip>
+                            </v-chip-group>
+                        </div>
 
-                        <p v-if="!selectedRole.permissions || selectedRole.permissions.length === 0" 
-                           class="text-center text-medium-emphasis mt-4">
+                        <v-alert v-else type="info" variant="tonal">
                             لا يوجد صلاحيات لهذا الدور
-                        </p>
+                        </v-alert>
                     </v-card-text>
 
                     <v-card-actions class="pa-4">
@@ -209,39 +339,85 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoleStore } from '@/stores/role';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 import RoleDialog from '@/components/roles/RoleDialog.vue';
 import RoleDeleteDialog from '@/components/roles/RoleDeleteDialog.vue';
 
 // ====================================
-// Store
+// Stores
 // ====================================
 const roleStore = useRoleStore();
 
 // ====================================
 // Reactive Data
 // ====================================
-const search = ref('');
+const searchQuery = ref('');
+const sortBy = ref('created_at');
+const sortOrder = ref('desc');
+const perPage = ref(10);
 const dialog = ref(false);
 const deleteDialog = ref(false);
 const viewDialog = ref(false);
 const selectedRole = ref(null);
 
 // ====================================
+// Computed
+// ====================================
+const currentPage = computed({
+    get: () => roleStore.pagination.currentPage,
+    set: (value) => loadPage(value)
+});
+
+// ====================================
 // Table Headers
 // ====================================
 const headers = [
-    { title: 'الدور', key: 'name', sortable: true },
-    { title: 'عدد المستخدمين', key: 'users_count', sortable: true },
+    { title: 'الدور', key: 'name', sortable: false, width: '300px' },
+    { title: 'عدد المستخدمين', key: 'users_count', sortable: false, align: 'center', width: '180px' },
     { title: 'الصلاحيات', key: 'permissions', sortable: false },
-    { title: 'الإجراءات', key: 'actions', sortable: false, align: 'center' },
+    { title: 'النوع', key: 'system', sortable: false, align: 'center', width: '120px' },
+    { title: 'الإجراءات', key: 'actions', sortable: false, align: 'center', width: '150px' },
 ];
 
 // ====================================
 // Methods
 // ====================================
+
+/**
+ * تحميل صفحة معينة
+ */
+async function loadPage(page) {
+    await roleStore.fetchRoles(page);
+}
+
+/**
+ * تطبيق البحث
+ */
+async function applySearch() {
+    await roleStore.applyFilters({
+        search: searchQuery.value,
+    });
+}
+
+/**
+ * تطبيق الفلاتر
+ */
+async function applyFilters() {
+    await roleStore.applyFilters({
+        search: searchQuery.value,
+        sortBy: sortBy.value,
+        sortOrder: sortOrder.value,
+    });
+}
+
+/**
+ * تغيير عدد العناصر في الصفحة
+ */
+async function changePerPage() {
+    await roleStore.changePerPage(perPage.value);
+}
 
 /**
  * فتح نموذج إضافة دور
@@ -276,7 +452,7 @@ function viewRolePermissions(role) {
 }
 
 /**
- * عند حفظ دور (إضافة أو تعديل)
+ * عند حفظ دور
  */
 function onRoleSaved() {
     dialog.value = false;
@@ -292,15 +468,40 @@ function onRoleDeleted() {
 }
 
 /**
- * التحقق من أن الدور هو دور نظام (محمي)
+ * التحقق من أن الدور محمي
  */
 function isSystemRole(roleName) {
     return ['super_admin', 'admin'].includes(roleName);
 }
 
 /**
- * تنسيق اسم الصلاحية للعرض
- * مثلاً: products.view -> عرض المنتجات
+ * تنسيق اسم الدور
+ */
+function formatRoleName(roleName) {
+    const names = {
+        'super_admin': 'مدير النظام',
+        'admin': 'مدير',
+        'manager': 'مشرف',
+        'employee': 'موظف',
+    };
+    return names[roleName] || roleName;
+}
+
+/**
+ * الحصول على لون الدور
+ */
+function getRoleColor(roleName) {
+    const colors = {
+        'super_admin': 'error',
+        'admin': 'warning',
+        'manager': 'info',
+        'employee': 'success',
+    };
+    return colors[roleName] || 'primary';
+}
+
+/**
+ * تنسيق اسم الصلاحية
  */
 function formatPermissionName(permissionName) {
     const translations = {
@@ -324,25 +525,42 @@ function formatPermissionName(permissionName) {
         'roles.create': 'إضافة دور',
         'roles.edit': 'تعديل دور',
         'roles.delete': 'حذف دور',
-        'permissions.view': 'عرض الصلاحيات',
-        'permissions.create': 'إضافة صلاحية',
-        'permissions.edit': 'تعديل صلاحية',
-        'permissions.delete': 'حذف صلاحية',
     };
-
     return translations[permissionName] || permissionName;
 }
+
+// ====================================
+// Watchers
+// ====================================
+
+// مراقبة البحث مع Debounce
+let searchTimeout;
+watch(searchQuery, (newValue) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        applySearch();
+    }, 500);
+});
 
 // ====================================
 // Lifecycle Hooks
 // ====================================
 onMounted(async () => {
     // جلب البيانات عند تحميل الصفحة
-    await roleStore.fetchRoles();
+    perPage.value = roleStore.pagination.perPage;
+    await roleStore.fetchRoles(1);
     await roleStore.fetchPermissions();
 });
 </script>
 
 <style scoped>
-/* Styles مخصصة */
+/* تحسينات التصميم */
+.v-data-table :deep(.v-data-table__tr):hover {
+    background-color: rgba(var(--v-theme-primary), 0.05);
+}
+
+.v-pagination :deep(.v-pagination__item--is-active) {
+    background-color: rgb(var(--v-theme-primary));
+    color: white;
+}
 </style>

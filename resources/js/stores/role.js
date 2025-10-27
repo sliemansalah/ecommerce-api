@@ -1,263 +1,258 @@
 // resources/js/stores/role.js
 
-import axios from "axios";
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia';
+import axios from '@/plugins/axios';
 
-/**
- * Role Store
- *
- * مسؤول عن إدارة الأدوار (Roles) والصلاحيات (Permissions)
- */
-export const useRoleStore = defineStore("role", {
-  // ====================================
-  // State
-  // ====================================
-  state: () => ({
-    roles: [], // مصفوفة الأدوار
-    permissions: {}, // جميع الصلاحيات (مجمعة حسب النوع)
-    currentRole: null, // الدور المحدد حالياً
-    loading: false,
-    error: null,
-  }),
+export const useRoleStore = defineStore('role', {
+    // ====================================
+    // State
+    // ====================================
+    state: () => ({
+        roles: [],
+        permissions: {},
+        loading: false,
+        error: null,
+        
+        // Pagination
+        pagination: {
+            currentPage: 1,
+            lastPage: 1,
+            perPage: 10,
+            total: 0,
+            from: 0,
+            to: 0,
+        },
+        
+        // Filters
+        filters: {
+            search: '',
+            sortBy: 'created_at',
+            sortOrder: 'desc',
+        },
+    }),
 
-  // ====================================
-  // Getters
-  // ====================================
-  getters: {
-    /**
-     * عدد الأدوار
-     */
-    rolesCount: (state) => state.roles.length,
+    // ====================================
+    // Getters
+    // ====================================
+    getters: {
+        /**
+         * الحصول على دور حسب ID
+         */
+        getRoleById: (state) => (id) => {
+            return state.roles.find(role => role.id === id);
+        },
 
-    /**
-     * البحث عن دور بـ ID
-     */
-    getRoleById: (state) => (id) => {
-      return state.roles.find(role => role.id === id);
+        /**
+         * هل يوجد صفحة تالية؟
+         */
+        hasNextPage: (state) => {
+            return state.pagination.currentPage < state.pagination.lastPage;
+        },
+
+        /**
+         * هل يوجد صفحة سابقة؟
+         */
+        hasPrevPage: (state) => {
+            return state.pagination.currentPage > 1;
+        },
     },
 
-    /**
-     * البحث عن دور بالاسم
-     */
-    getRoleByName: (state) => (name) => {
-      return state.roles.find(role => role.name === name);
+    // ====================================
+    // Actions
+    // ====================================
+    actions: {
+        /**
+         * جلب الأدوار مع Pagination
+         */
+        async fetchRoles(page = 1) {
+            this.loading = true;
+            this.error = null;
+            
+            try {
+                const params = {
+                    page: page,
+                    per_page: this.pagination.perPage,
+                    search: this.filters.search || undefined,
+                    sort_by: this.filters.sortBy,
+                    sort_order: this.filters.sortOrder,
+                };
+
+                const response = await axios.get('/api/roles', { params });
+                
+                console.log('Fetch Roles Response:', response.data);
+                
+                // تخزين الأدوار
+                this.roles = response.data.data || [];
+                
+                // تحديث pagination
+                if (response.data.pagination) {
+                    this.pagination = response.data.pagination;
+                }
+                
+                return { success: true, data: this.roles };
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Failed to fetch roles';
+                console.error('Fetch roles error:', error);
+                
+                return { 
+                    success: false, 
+                    message: this.error 
+                };
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        /**
+         * جلب جميع الصلاحيات مجمعة
+         */
+        async fetchPermissions() {
+            try {
+                const response = await axios.get('/api/permissions');
+                this.permissions = response.data.data || {};
+                
+                return { success: true, data: this.permissions };
+            } catch (error) {
+                console.error('Fetch permissions error:', error);
+                return { success: false };
+            }
+        },
+
+        /**
+         * تطبيق الفلاتر والبحث
+         */
+        async applyFilters(filters = {}) {
+            this.filters = {
+                ...this.filters,
+                ...filters,
+            };
+            
+            // إعادة التحميل من الصفحة الأولى
+            await this.fetchRoles(1);
+        },
+
+        /**
+         * تغيير عدد العناصر في الصفحة
+         */
+        async changePerPage(perPage) {
+            console.log('Changing per_page to:', perPage);
+            this.pagination.perPage = perPage;
+            this.pagination.currentPage = 1; // إعادة تعيين للصفحة الأولى
+            await this.fetchRoles(1);
+        },
+
+        /**
+         * الانتقال للصفحة التالية
+         */
+        async nextPage() {
+            if (this.hasNextPage) {
+                await this.fetchRoles(this.pagination.currentPage + 1);
+            }
+        },
+
+        /**
+         * الانتقال للصفحة السابقة
+         */
+        async prevPage() {
+            if (this.hasPrevPage) {
+                await this.fetchRoles(this.pagination.currentPage - 1);
+            }
+        },
+
+        /**
+         * إنشاء دور جديد
+         */
+        async createRole(roleData) {
+            this.loading = true;
+            
+            try {
+                const response = await axios.post('/api/roles', roleData);
+                
+                // إعادة تحميل القائمة
+                await this.fetchRoles(this.pagination.currentPage);
+                
+                return { 
+                    success: true, 
+                    data: response.data.data 
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    message: error.response?.data?.message || 'Failed to create role',
+                    errors: error.response?.data?.errors,
+                };
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        /**
+         * تحديث دور
+         */
+        async updateRole(id, roleData) {
+            this.loading = true;
+            
+            try {
+                const response = await axios.put(`/api/roles/${id}`, roleData);
+                
+                // تحديث في القائمة المحلية
+                const index = this.roles.findIndex(r => r.id === id);
+                if (index !== -1) {
+                    this.roles[index] = response.data.data;
+                }
+                
+                return { 
+                    success: true, 
+                    data: response.data.data 
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    message: error.response?.data?.message || 'Failed to update role',
+                    errors: error.response?.data?.errors,
+                };
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        /**
+         * حذف دور
+         */
+        async deleteRole(id) {
+            this.loading = true;
+            
+            try {
+                await axios.delete(`/api/roles/${id}`);
+                
+                // إزالة من القائمة المحلية
+                this.roles = this.roles.filter(r => r.id !== id);
+                
+                // إعادة تحميل إذا كانت الصفحة فارغة
+                if (this.roles.length === 0 && this.pagination.currentPage > 1) {
+                    await this.fetchRoles(this.pagination.currentPage - 1);
+                }
+                
+                return { success: true };
+            } catch (error) {
+                return {
+                    success: false,
+                    message: error.response?.data?.message || 'Failed to delete role',
+                };
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        /**
+         * مسح الفلاتر
+         */
+        clearFilters() {
+            this.filters = {
+                search: '',
+                sortBy: 'created_at',
+                sortOrder: 'desc',
+            };
+        },
     },
-
-    /**
-     * قائمة أسماء الأدوار (للاستخدام في Select)
-     */
-    roleNames: (state) => {
-      return state.roles.map(role => ({
-        id: role.id,
-        name: role.name,
-      }));
-    },
-
-    /**
-     * جميع الصلاحيات كمصفوفة مسطحة
-     */
-    allPermissions: (state) => {
-      const permissions = [];
-      Object.keys(state.permissions).forEach(key => {
-        permissions.push(...state.permissions[key]);
-      });
-      return permissions;
-    },
-  },
-
-  // ====================================
-  // Actions
-  // ====================================
-  actions: {
-    /**
-     * جلب جميع الأدوار
-     *
-     * GET /api/roles
-     */
-    async fetchRoles() {
-      this.loading = true;
-      this.error = null;
-
-      try {
-        const response = await axios.get("/api/roles");
-        this.roles = response.data.data;
-
-        return { success: true, data: response.data.data };
-      } catch (error) {
-        this.error = error.response?.data?.message || "Failed to fetch roles";
-        return { success: false, message: this.error };
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    /**
-     * جلب جميع الصلاحيات المتاحة
-     *
-     * GET /api/permissions
-     *
-     * ترجع الصلاحيات مجمعة حسب النوع:
-     * {
-     *   products: [{ id: 1, name: 'products.view' }, ...],
-     *   categories: [{ id: 5, name: 'categories.view' }, ...],
-     *   ...
-     * }
-     */
-    async fetchPermissions() {
-      this.loading = true;
-      this.error = null;
-
-      try {
-        const response = await axios.get("/api/permissions");
-        this.permissions = response.data.data;
-
-        return { success: true, data: response.data.data };
-      } catch (error) {
-        this.error = error.response?.data?.message || "Failed to fetch permissions";
-        return { success: false, message: this.error };
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    /**
-     * جلب دور واحد بـ ID
-     *
-     * GET /api/roles/{id}
-     */
-    async fetchRole(id) {
-      this.loading = true;
-      this.error = null;
-
-      try {
-        const response = await axios.get(`/api/roles/${id}`);
-        this.currentRole = response.data.data;
-
-        return { success: true, data: response.data.data };
-      } catch (error) {
-        this.error = error.response?.data?.message || "Failed to fetch role";
-        return { success: false, message: this.error };
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    /**
-     * إضافة دور جديد
-     *
-     * POST /api/roles
-     *
-     * @param {Object} roleData
-     * @param {string} roleData.name - اسم الدور
-     * @param {Array} roleData.permissions - مصفوفة IDs الصلاحيات
-     */
-    async createRole(roleData) {
-      this.loading = true;
-      this.error = null;
-
-      try {
-        const response = await axios.post("/api/roles", roleData);
-
-        // إضافة الدور الجديد للمصفوفة
-        this.roles.push(response.data.data);
-
-        return {
-          success: true,
-          data: response.data.data,
-          message: "Role created successfully",
-        };
-      } catch (error) {
-        this.error = error.response?.data?.message || "Failed to create role";
-
-        return {
-          success: false,
-          message: this.error,
-          errors: error.response?.data?.errors,
-        };
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    /**
-     * تعديل دور موجود
-     *
-     * PUT /api/roles/{id}
-     */
-    async updateRole(id, roleData) {
-      this.loading = true;
-      this.error = null;
-
-      try {
-        const response = await axios.put(`/api/roles/${id}`, roleData);
-
-        // تحديث الدور في المصفوفة
-        const index = this.roles.findIndex(r => r.id === id);
-        if (index !== -1) {
-          this.roles[index] = response.data.data;
-        }
-
-        return {
-          success: true,
-          data: response.data.data,
-          message: "Role updated successfully",
-        };
-      } catch (error) {
-        this.error = error.response?.data?.message || "Failed to update role";
-
-        return {
-          success: false,
-          message: this.error,
-          errors: error.response?.data?.errors,
-        };
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    /**
-     * حذف دور
-     *
-     * DELETE /api/roles/{id}
-     */
-    async deleteRole(id) {
-      this.loading = true;
-      this.error = null;
-
-      try {
-        await axios.delete(`/api/roles/${id}`);
-
-        // حذف الدور من المصفوفة
-        this.roles = this.roles.filter(r => r.id !== id);
-
-        return {
-          success: true,
-          message: "Role deleted successfully",
-        };
-      } catch (error) {
-        this.error = error.response?.data?.message || "Failed to delete role";
-
-        return {
-          success: false,
-          message: this.error,
-        };
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    /**
-     * مسح حالة الخطأ
-     */
-    clearError() {
-      this.error = null;
-    },
-
-    /**
-     * مسح الدور الحالي
-     */
-    clearCurrentRole() {
-      this.currentRole = null;
-    },
-  },
 });

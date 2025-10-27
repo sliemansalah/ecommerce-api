@@ -121,7 +121,9 @@ export const useUserStore = defineStore('user', {
          * تغيير عدد العناصر في الصفحة
          */
         async changePerPage(perPage) {
+            console.log('Changing per_page to:', perPage);
             this.pagination.perPage = perPage;
+            this.pagination.currentPage = 1; // إعادة تعيين للصفحة الأولى
             await this.fetchUsers(1);
         },
 
