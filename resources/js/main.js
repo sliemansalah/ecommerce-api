@@ -1,4 +1,5 @@
 // resources/js/main.js
+
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import App from './App.vue';
@@ -8,22 +9,20 @@ import axios from './plugins/axios';
 
 // إنشاء التطبيق
 const app = createApp(App);
-
-// إضافة Pinia
 const pinia = createPinia();
+
+// تثبيت Plugins
 app.use(pinia);
-
-// إضافة Router
 app.use(router);
-
-// إضافة Vuetify
 app.use(vuetify);
 
-// جعل Axios متاح عالمياً
+// جعل axios متاح في كل التطبيق
 app.config.globalProperties.$axios = axios;
 
-// تفعيل DevTools في وضع التطوير
-app.config.performance = true;
+// تهيئة Auth Store قبل mount
+import { useAuthStore } from '@/stores/auth';
+const authStore = useAuthStore();
+authStore.initAuth();
 
-// تركيب التطبيق
+// تثبيت التطبيق
 app.mount('#app');

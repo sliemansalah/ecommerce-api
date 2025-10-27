@@ -121,7 +121,7 @@
                 @click="toggleTheme"
             >
                 <v-icon>
-                    {{ theme.global.current.value.dark ? 'mdi-weather-sunny' : 'mdi-weather-night' }}
+                    {{ isDark ? 'mdi-weather-sunny' : 'mdi-weather-night' }}
                 </v-icon>
             </v-btn>
 
@@ -163,41 +163,71 @@
         <!-- المحتوى الرئيسي -->
         <v-main>
             <v-container fluid>
-                <router-view />
+                <slot />
             </v-container>
         </v-main>
     </v-layout>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useTheme } from 'vuetify';
 import { useAuthStore } from '@/stores/auth';
 
+// ====================================
+// Theme & Store
+// ====================================
 const theme = useTheme();
 const authStore = useAuthStore();
 
+// ====================================
+// Reactive Data
+// ====================================
 const drawer = ref(true);
 const rail = ref(false);
 const search = ref('');
+const isDark = ref(false);
 
+// ====================================
+// Computed
+// ====================================
 const user = computed(() => authStore.currentUser);
 const hasPermission = computed(() => authStore.hasPermission);
 
+// ====================================
+// Methods
+// ====================================
+
+/**
+ * تبديل الثيم (فاتح/داكن)
+ */
 const toggleTheme = () => {
-    theme.global.name.value = theme.global.current.value.dark ? 'lightTheme' : 'darkTheme';
+    isDark.value = !isDark.value;
+    theme.global.name.value = isDark.value ? 'dark' : 'light';
     localStorage.setItem('theme', theme.global.name.value);
 };
 
+/**
+ * تسجيل الخروج
+ */
 const handleLogout = async () => {
     await authStore.logout();
 };
 
-// استرجاع الثيم المحفوظ
-const savedTheme = localStorage.getItem('theme');
-if (savedTheme) {
-    theme.global.name.value = savedTheme;
-}
+// ====================================
+// Lifecycle
+// ====================================
+onMounted(() => {
+    // استرجاع الثيم المحفوظ
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+        isDark.value = savedTheme === 'dark';
+        theme.global.name.value = savedTheme;
+    } else {
+        // التحقق من الثيم الحالي
+        isDark.value = theme.global.current.value.dark;
+    }
+});
 </script>
 
 <style scoped>

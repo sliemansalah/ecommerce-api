@@ -16,7 +16,8 @@ const axiosInstance = axios.create({
 // Request Interceptor - إضافة Token تلقائياً
 axiosInstance.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('auth_token');
+        // ✅ تغيير من 'auth_token' إلى 'token'
+        const token = localStorage.getItem('token');
         
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -36,25 +37,30 @@ axiosInstance.interceptors.response.use(
     },
     (error) => {
         // معالجة خطأ 401 - Unauthorized
-        if (error.response && error.response.status === 401) {
-            localStorage.removeItem('auth_token');
+        if (error.response?.status === 401) {
+            // ✅ تغيير من 'auth_token' إلى 'token'
+            localStorage.removeItem('token');
             localStorage.removeItem('user');
-            router.push({ name: 'login' });
+            
+            // منع إعادة التوجيه المتكررة
+            if (router.currentRoute.value.name !== 'login') {
+                router.push({ name: 'login' });
+            }
         }
         
         // معالجة خطأ 403 - Forbidden
-        if (error.response && error.response.status === 403) {
+        if (error.response?.status === 403) {
             router.push({ name: 'forbidden' });
         }
         
         // معالجة خطأ 404 - Not Found
-        if (error.response && error.response.status === 404) {
-            // يمكن عرض رسالة خطأ
+        if (error.response?.status === 404) {
+            console.error('Resource not found:', error.config?.url);
         }
         
         // معالجة خطأ 500 - Server Error
-        if (error.response && error.response.status === 500) {
-            // يمكن عرض رسالة خطأ عامة
+        if (error.response?.status === 500) {
+            console.error('Server error:', error.response.data);
         }
         
         return Promise.reject(error);
