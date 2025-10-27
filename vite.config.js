@@ -20,15 +20,18 @@ export default defineConfig({
         }),
         vuetify({
             autoImport: true,
-            styles: {
-                configFile: 'resources/js/styles/settings.scss',
-            },
+            // احذف هذا الجزء بالكامل ↓
+            // styles: {
+            //     configFile: 'resources/js/styles/settings.scss',
+            // },
         }),
     ],
     resolve: {
         alias: {
-            '@': fileURLToPath(new URL('./resources/js', import.meta.url)),
-            '~': fileURLToPath(new URL('./resources', import.meta.url)),
+            '@': fileURLToPath(new URL('./resources/js',
+                import.meta.url)),
+            '~': fileURLToPath(new URL('./resources',
+                import.meta.url)),
         },
     },
     server: {
