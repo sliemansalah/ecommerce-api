@@ -4,186 +4,247 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Validator;
 
-/**
- * UserController
- * 
- * هذا الـ Controller مسؤول عن إدارة المستخدمين
- * يحتوي على 5 وظائف رئيسية (CRUD):
- * 1. index - عرض جميع المستخدمين
- * 2. store - إضافة مستخدم جديد
- * 3. show - عرض مستخدم واحد
- * 4. update - تعديل مستخدم
- * 5. destroy - حذف مستخدم
- */
 class UserController extends Controller
 {
-    use ApiResponse; // استخدام Trait للردود الموحدة
-
     /**
-     * عرض جميع المستخدمين
+     * عرض قائمة المستخدمين مع Pagination و Filters
      * 
      * GET /api/users
      * 
-     * يرجع قائمة بجميع المستخدمين مع:
-     * - معلومات المستخدم الأساسية
-     * - الأدوار المرتبطة بكل مستخدم
-     * - الصلاحيات المباشرة
+     * Query Parameters:
+     * - page: رقم الصفحة (default: 1)
+     * - per_page: عدد العناصر في الصفحة (default: 10)
+     * - search: البحث في الاسم والبريد
+     * - role_id: تصفية حسب الدور
+     * - sort_by: الترتيب حسب (name, email, created_at)
+     * - sort_order: اتجاه الترتيب (asc, desc)
      */
-    public function index()
+    public function index(Request $request)
     {
-        // جلب جميع المستخدمين مع علاقاتهم (roles و permissions)
-        // eager loading يحسّن الأداء ويمنع مشكلة N+1
-        $users = User::with(['roles', 'permissions'])->get();
+        $perPage = $request->input('per_page', 10);
+        $search = $request->input('search');
+        $roleId = $request->input('role_id');
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortOrder = $request->input('sort_order', 'desc');
 
-        // إرجاع النتيجة بصيغة JSON
-        return $this->successResponse($users, 'Users retrieved successfully');
-    }
+        // Query Builder
+        $query = User::with(['roles.permissions']);
 
-    /**
-     * إضافة مستخدم جديد
-     * 
-     * POST /api/users
-     * 
-     * البيانات المطلوبة:
-     * - name: اسم المستخدم (إجباري، نص، 3-255 حرف)
-     * - email: البريد الإلكتروني (إجباري، فريد، بصيغة email صحيحة)
-     * - password: كلمة المرور (إجباري، 8 أحرف على الأقل)
-     * - roles: مصفوفة من IDs الأدوار (اختياري)
-     */
-    public function store(Request $request)
-    {
-        // التحقق من صحة البيانات (Validation)
-        $validated = $request->validate([
-            'name' => 'required|string|min:3|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8',
-            'roles' => 'nullable|array',
-            'roles.*' => 'exists:roles,id', // التأكد من وجود الأدوار
-        ]);
-
-        // إنشاء المستخدم الجديد
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']), // تشفير كلمة المرور
-        ]);
-
-        // تعيين الأدوار إذا تم إرسالها
-        if (isset($validated['roles'])) {
-            $user->syncRoles($validated['roles']);
+        // البحث في الاسم والبريد
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
         }
 
-        // إعادة تحميل المستخدم مع علاقاته
-        $user->load(['roles', 'permissions']);
+        // التصفية حسب الدور
+        if ($roleId) {
+            $query->whereHas('roles', function ($q) use ($roleId) {
+                $q->where('roles.id', $roleId);
+            });
+        }
 
-        // إرجاع النتيجة
-        return $this->successResponse($user, 'User created successfully', 201);
+        // الترتيب
+        $allowedSortColumns = ['name', 'email', 'created_at'];
+        if (in_array($sortBy, $allowedSortColumns)) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+
+        // Pagination
+        $users = $query->paginate($perPage);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Users retrieved successfully',
+            'data' => $users->items(),
+            'pagination' => [
+                'current_page' => $users->currentPage(),
+                'last_page' => $users->lastPage(),
+                'per_page' => $users->perPage(),
+                'total' => $users->total(),
+                'from' => $users->firstItem(),
+                'to' => $users->lastItem(),
+            ]
+        ], 200);
     }
 
     /**
      * عرض مستخدم واحد
      * 
      * GET /api/users/{id}
-     * 
-     * يرجع معلومات مستخدم محدد مع أدواره وصلاحياته
      */
     public function show($id)
     {
-        // البحث عن المستخدم
-        $user = User::with(['roles.permissions', 'permissions'])->find($id);
+        $user = User::with(['roles.permissions'])->find($id);
 
-        // إذا لم يُعثر على المستخدم
         if (!$user) {
-            return $this->notFoundResponse('User not found');
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not found'
+            ], 404);
         }
 
-        return $this->successResponse($user);
+        return response()->json([
+            'status' => 'success',
+            'data' => $user
+        ], 200);
     }
 
     /**
-     * تعديل مستخدم
+     * إنشاء مستخدم جديد
      * 
-     * PUT/PATCH /api/users/{id}
-     * 
-     * البيانات المطلوبة:
-     * - name: اسم المستخدم (اختياري)
-     * - email: البريد الإلكتروني (اختياري، فريد)
-     * - password: كلمة المرور الجديدة (اختياري)
-     * - roles: مصفوفة من IDs الأدوار (اختياري)
+     * POST /api/users
      */
-    public function update(Request $request, $id)
+    public function store(Request $request)
     {
-        // البحث عن المستخدم
-        $user = User::find($id);
-
-        if (!$user) {
-            return $this->notFoundResponse('User not found');
-        }
-
-        // التحقق من صحة البيانات
-        // Rule::unique يتجاهل المستخدم الحالي عند التحقق من الـ email
-        $validated = $request->validate([
-            'name' => 'sometimes|string|min:3|max:255',
-            'email' => ['sometimes', 'email', Rule::unique('users')->ignore($user->id)],
-            'password' => 'sometimes|string|min:8',
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8',
             'roles' => 'nullable|array',
             'roles.*' => 'exists:roles,id',
         ]);
 
-        // تحديث البيانات
-        if (isset($validated['name'])) {
-            $user->name = $validated['name'];
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
-        if (isset($validated['email'])) {
-            $user->email = $validated['email'];
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+
+        // إضافة الأدوار
+        if ($request->has('roles')) {
+            $user->syncRoles($request->roles);
         }
 
-        if (isset($validated['password'])) {
-            $user->password = Hash::make($validated['password']);
+        // إعادة تحميل العلاقات
+        $user->load(['roles.permissions']);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User created successfully',
+            'data' => $user
+        ], 201);
+    }
+
+    /**
+     * تحديث مستخدم
+     * 
+     * PUT /api/users/{id}
+     */
+    public function update(Request $request, $id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $id,
+            'password' => 'nullable|string|min:8',
+            'roles' => 'nullable|array',
+            'roles.*' => 'exists:roles,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
         }
 
         $user->save();
 
-        // تحديث الأدوار إذا تم إرسالها
-        if (isset($validated['roles'])) {
-            $user->syncRoles($validated['roles']);
+        // تحديث الأدوار
+        if ($request->has('roles')) {
+            $user->syncRoles($request->roles);
         }
 
-        // إعادة تحميل المستخدم مع علاقاته
-        $user->load(['roles', 'permissions']);
+        // إعادة تحميل العلاقات
+        $user->load(['roles.permissions']);
 
-        return $this->successResponse($user, 'User updated successfully');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User updated successfully',
+            'data' => $user
+        ], 200);
     }
 
     /**
      * حذف مستخدم
      * 
      * DELETE /api/users/{id}
-     * 
-     * ملاحظة: لا يمكن حذف المستخدم الحالي (نفسه)
      */
-    public function destroy(Request $request, $id)
+    public function destroy($id)
     {
         $user = User::find($id);
 
         if (!$user) {
-            return $this->notFoundResponse('User not found');
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not found'
+            ], 404);
         }
 
-        // منع المستخدم من حذف نفسه
-        if ($user->id === $request->user()->id) {
-            return $this->errorResponse('You cannot delete yourself', 400);
+        // منع حذف المستخدم الحالي
+        if ($user->id === auth()->id()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You cannot delete yourself'
+            ], 403);
         }
 
-        // حذف المستخدم
         $user->delete();
 
-        return $this->successResponse(null, 'User deleted successfully');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User deleted successfully'
+        ], 200);
+    }
+
+    /**
+     * إحصائيات المستخدمين
+     * 
+     * GET /api/users/stats
+     */
+    public function stats()
+    {
+        $totalUsers = User::count();
+        $activeUsers = User::whereNotNull('email_verified_at')->count();
+        $recentUsers = User::where('created_at', '>=', now()->subDays(30))->count();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'total_users' => $totalUsers,
+                'active_users' => $activeUsers,
+                'recent_users' => $recentUsers,
+            ]
+        ], 200);
     }
 }

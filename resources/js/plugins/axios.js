@@ -4,19 +4,19 @@ import router from '@/router';
 
 // إنشاء instance من Axios
 const axiosInstance = axios.create({
-    baseURL: '/api',
+    baseURL: 'http://localhost:8000', // ✅ بدون /api
     timeout: 30000,
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'X-Requested-With': 'XMLHttpRequest',
     },
+    withCredentials: true,
 });
 
 // Request Interceptor - إضافة Token تلقائياً
 axiosInstance.interceptors.request.use(
     (config) => {
-        // ✅ تغيير من 'auth_token' إلى 'token'
         const token = localStorage.getItem('token');
         
         if (token) {
@@ -38,7 +38,6 @@ axiosInstance.interceptors.response.use(
     (error) => {
         // معالجة خطأ 401 - Unauthorized
         if (error.response?.status === 401) {
-            // ✅ تغيير من 'auth_token' إلى 'token'
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             

@@ -4,25 +4,79 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    use ApiResponse;
+    /**
+     * تسجيل الدخول
+     * 
+     * POST /api/login
+     */
+    public function login(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // محاولة تسجيل الدخول
+        if (!Auth::attempt($request->only('email', 'password'))) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid credentials'
+            ], 401);
+        }
+
+        $user = Auth::user();
+        
+        // تحميل العلاقات
+        $user->load(['roles.permissions']);
+        
+        // إنشاء Token
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Login successful',
+            'data' => [
+                'token' => $token,
+                'user' => $user,
+            ]
+        ], 200);
+    }
 
     /**
-     * تسجيل مستخدم جديد
+     * التسجيل
+     * 
+     * POST /api/register
      */
     public function register(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         $user = User::create([
             'name' => $request->name,
@@ -30,67 +84,54 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // إضافة دور افتراضي
+        $user->assignRole('employee');
+
+        // تحميل العلاقات
+        $user->load(['roles.permissions']);
+
         // إنشاء Token
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return $this->successResponse([
-            'user' => $user,
-            'token' => $token,
-        ], 'User registered successfully', 201);
-    }
-
-    /**
-     * تسجيل الدخول
-     */
-    public function login(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
-
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['البريد الإلكتروني أو كلمة المرور غير صحيحة'],
-            ]);
-        }
-
-        // حذف Tokens القديمة (اختياري)
-        // $user->tokens()->delete();
-
-        // إنشاء Token جديد
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        // تحميل العلاقات
-        $user->load(['roles.permissions', 'permissions']);
-
-        return $this->successResponse([
-            'user' => $user,
-            'token' => $token,
-        ], 'Login successful');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Registration successful',
+            'data' => [
+                'token' => $token,
+                'user' => $user,
+            ]
+        ], 201);
     }
 
     /**
      * تسجيل الخروج
+     * 
+     * POST /api/logout
      */
     public function logout(Request $request)
     {
-        // حذف Token الحالي
-        $request->user()->currentAccessToken()->delete();
+        // حذف جميع tokens المستخدم
+        $request->user()->tokens()->delete();
 
-        return $this->successResponse(null, 'Logged out successfully');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Logout successful'
+        ], 200);
     }
 
     /**
      * الحصول على المستخدم الحالي
+     * 
+     * GET /api/me
      */
     public function me(Request $request)
     {
         $user = $request->user();
-        $user->load(['roles.permissions', 'permissions']);
+        $user->load(['roles.permissions']);
 
-        return $this->successResponse($user);
+        return response()->json([
+            'status' => 'success',
+            'data' => $user
+        ], 200);
     }
 }
