@@ -31,8 +31,16 @@ export default createVuetify({
             },
         },
     },
-    rtl: true, // ✅ مهم
+    defaults: {
+        VBtn: {
+            elevation: 0,
+        },
+        VCard: {
+            elevation: 2,
+        },
+    },
+    rtl: true,
     locale: {
-        rtl: true, // ✅ إضافة هذا
+        rtl: true,
     },
 });
