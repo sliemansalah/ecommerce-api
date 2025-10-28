@@ -1,21 +1,51 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { authService } from '../services/auth';
 
 const routes = [
     {
         path: '/',
         name: 'home',
-        component: () => import('../views/HomePage.vue'),
+        component: () => import('../views/Home.vue'),
     },
     {
         path: '/about',
         name: 'about',
-        component: () => import('../views/AboutPage.vue'),
+        component: () => import('../views/About.vue'),
+    },
+    {
+        path: '/login',
+        name: 'login',
+        component: () => import('../views/Login.vue'),
+        meta: { guest: true },
+    },
+    {
+        path: '/profile',
+        name: 'profile',
+        component: () => import('../views/Profile.vue'),
+        meta: { requiresAuth: true },
     },
 ];
 
 const router = createRouter({
     history: createWebHistory(),
     routes,
+});
+
+// Navigation Guard
+router.beforeEach((to, from, next) => {
+    const isAuthenticated = authService.isAuthenticated();
+
+    // صفحات تحتاج تسجيل دخول
+    if (to.meta.requiresAuth && !isAuthenticated) {
+        next('/login');
+    }
+    // صفحات للضيوف فقط (مثل Login)
+    else if (to.meta.guest && isAuthenticated) {
+        next('/');
+    }
+    else {
+        next();
+    }
 });
 
 export default router;

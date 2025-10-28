@@ -1,37 +1,59 @@
 {
     "app": {
-        "title": "Tutorial Project - Laravel + Vue",
-        "welcome": "Welcome to the Tutorial Project",
-        "subtitle": "Laravel + Vue 3 + Vuetify",
-        "success_message": "Project launched successfully! 🎉",
-        "copyright": "© 2024 - Tutorial Project"
+        "title": "E-Commerce Store",
+        "copyright": "© 2024 All Rights Reserved"
     },
     "nav": {
         "home": "Home",
         "about": "About",
-        "language": "Language"
+        "language": "Language",
+        "login": "Login",
+        "logout": "Logout",
+        "profile": "Profile"
+    },
+    "auth": {
+        "login": {
+            "title": "Login",
+            "subtitle": "Welcome back!",
+            "email": "Email",
+            "password": "Password",
+            "remember": "Remember me",
+            "forgot": "Forgot password?",
+            "button": "Login",
+            "noAccount": "Don't have an account?",
+            "register": "Create account",
+            "success": "Logged in successfully",
+            "error": "Login failed"
+        },
+        "logout": {
+            "title": "Logout",
+            "message": "Are you sure you want to logout?",
+            "confirm": "Yes, Logout",
+            "cancel": "Cancel",
+            "success": "Logged out successfully"
+        },
+        "profile": {
+            "title": "Profile",
+            "name": "Name",
+            "email": "Email",
+            "phone": "Phone",
+            "lastLogin": "Last Login",
+            "edit": "Edit",
+            "save": "Save",
+            "cancel": "Cancel"
+        }
     },
     "home": {
-        "vue_ready": "Vue 3 - Ready",
-        "vuetify_ready": "Vuetify 3 - Ready",
-        "laravel_ready": "Laravel 11 - Ready",
-        "go_to_about": "Go to About Page"
+        "welcome": "Welcome to Our E-Commerce Store",
+        "description": "We offer you the best products at competitive prices"
     },
     "about": {
-        "title": "About Project",
-        "description": "This is a tutorial project to learn Laravel with Vue 3 and multi-language system",
-        "features": "Features",
-        "feature_1": "Support for 5 different languages",
-        "feature_2": "Instant language switching",
-        "feature_3": "Automatic language preference saving",
-        "feature_4": "RTL and LTR support",
-        "back_home": "Back to Home"
+        "title": "About Us",
+        "description": "We are an e-commerce platform striving to provide the best shopping experience"
     },
-    "languages": {
-        "ar": "Arabic",
-        "en": "English",
-        "fr": "French",
-        "es": "Spanish",
-        "de": "German"
+    "validation": {
+        "required": "This field is required",
+        "email": "Please enter a valid email",
+        "minLength": "Must be at least {length} characters"
     }
 }
