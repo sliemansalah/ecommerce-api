@@ -1,34 +1,52 @@
-/* RTL Support */
-* {
-    direction: rtl;
-}
-
-body {
-    font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* Multi-Direction Support */
+[dir="rtl"] {
     direction: rtl;
     text-align: right;
 }
 
-/* Vuetify RTL Fixes */
+[dir="ltr"] {
+    direction: ltr;
+    text-align: left;
+}
+
+body {
+    font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Vuetify RTL/LTR Fixes */
 .v-application {
-    direction: rtl !important;
+    transition: direction 0.3s ease;
 }
 
-.v-card-text,
-.v-list-item-title,
-.v-toolbar-title,
-.v-btn {
+[dir="rtl"] .v-card-text,
+[dir="rtl"] .v-list-item-title,
+[dir="rtl"] .v-toolbar-title {
     text-align: right !important;
-    direction: rtl !important;
 }
 
-/* App Bar RTL */
-.v-app-bar .v-toolbar-title {
-    margin-right: 16px !important;
-    margin-left: 0 !important;
+[dir="ltr"] .v-card-text,
+[dir="ltr"] .v-list-item-title,
+[dir="ltr"] .v-toolbar-title {
+    text-align: left !important;
 }
 
-.v-app-bar-nav-icon {
-    margin-right: 0 !important;
-    margin-left: 4px !important;
+/* Smooth transitions */
+.v-card, .v-list, .v-btn {
+    transition: all 0.3s ease;
+}
+
+/* Language Menu Styling */
+.v-list-item--active {
+    background-color: rgba(25, 118, 210, 0.1);
+}
+
+/* Navigation Drawer RTL/LTR Support */
+[dir="rtl"] .v-navigation-drawer {
+    right: 0;
+    left: auto;
+}
+
+[dir="ltr"] .v-navigation-drawer {
+    left: 0;
+    right: auto;
 }

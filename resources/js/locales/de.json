@@ -1,0 +1,37 @@
+{
+    "app": {
+        "title": "Tutorial-Projekt - Laravel + Vue",
+        "welcome": "Willkommen zum Tutorial-Projekt",
+        "subtitle": "Laravel + Vue 3 + Vuetify",
+        "success_message": "Projekt erfolgreich gestartet! 🎉",
+        "copyright": "© 2024 - Tutorial-Projekt"
+    },
+    "nav": {
+        "home": "Startseite",
+        "about": "Über",
+        "language": "Sprache"
+    },
+    "home": {
+        "vue_ready": "Vue 3 - Bereit",
+        "vuetify_ready": "Vuetify 3 - Bereit",
+        "laravel_ready": "Laravel 11 - Bereit",
+        "go_to_about": "Zur Über-Seite gehen"
+    },
+    "about": {
+        "title": "Über das Projekt",
+        "description": "Dies ist ein Tutorial-Projekt zum Erlernen von Laravel mit Vue 3 und Mehrsprachensystem",
+        "features": "Funktionen",
+        "feature_1": "Unterstützung für 5 verschiedene Sprachen",
+        "feature_2": "Sofortiger Sprachwechsel",
+        "feature_3": "Automatisches Speichern der Sprachpräferenz",
+        "feature_4": "RTL- und LTR-Unterstützung",
+        "back_home": "Zurück zur Startseite"
+    },
+    "languages": {
+        "ar": "Arabisch",
+        "en": "Englisch",
+        "fr": "Französisch",
+        "es": "Spanisch",
+        "de": "Deutsch"
+    }
+}

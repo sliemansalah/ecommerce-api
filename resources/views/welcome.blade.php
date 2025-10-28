@@ -11,17 +11,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     
-    <style>
-        * {
-            direction: rtl;
-            text-align: right;
-        }
-        
-        body {
-            font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-    </style>
-    
     @vite(['resources/css/app.css', 'resources/js/main.js'])
 </head>
 <body>
