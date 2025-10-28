@@ -15,13 +15,12 @@
         "login": {
             "title": "Login",
             "subtitle": "Welcome back!",
+            "promo": "Integrated e-commerce management system",
             "email": "Email",
             "password": "Password",
             "remember": "Remember me",
-            "forgot": "Forgot password?",
             "button": "Login",
-            "noAccount": "Don't have an account?",
-            "register": "Create account",
+            "secure": "Secure and encrypted login",
             "success": "Logged in successfully",
             "error": "Login failed"
         },
