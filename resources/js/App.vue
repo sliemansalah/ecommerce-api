@@ -1,12 +1,12 @@
 <template>
-    <v-app>
+    <v-app :rtl="true">
         <v-app-bar color="primary" prominent>
-            <v-app-bar-nav-icon></v-app-bar-nav-icon>
             <v-toolbar-title>مشروع تعليمي - Laravel + Vue</v-toolbar-title>
             <v-spacer></v-spacer>
             <v-btn icon>
                 <v-icon>mdi-magnify</v-icon>
             </v-btn>
+            <v-app-bar-nav-icon></v-app-bar-nav-icon>
         </v-app-bar>
 
         <v-main>
@@ -24,5 +24,9 @@
 </template>
 
 <script setup>
-// يمكنك إضافة Logic هنا لاحقاً
+import { useRtl } from 'vuetify';
+
+// تفعيل RTL
+const { isRtl } = useRtl();
+isRtl.value = true;
 </script>

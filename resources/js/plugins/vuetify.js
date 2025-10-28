@@ -31,5 +31,8 @@ export default createVuetify({
             },
         },
     },
-    rtl: true, // دعم العربية
+    rtl: true, // ✅ مهم
+    locale: {
+        rtl: true, // ✅ إضافة هذا
+    },
 });
