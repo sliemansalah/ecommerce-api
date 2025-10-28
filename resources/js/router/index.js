@@ -6,17 +6,22 @@ const routes = [
         path: '/',
         name: 'home',
         component: () => import('../views/Home.vue'),
+        meta: { requiresAuth: true },
     },
     {
         path: '/about',
         name: 'about',
         component: () => import('../views/About.vue'),
+        meta: { requiresAuth: true },
     },
     {
         path: '/login',
         name: 'login',
         component: () => import('../views/Login.vue'),
-        meta: { guest: true },
+        meta: { 
+            guest: true,
+            layout: 'auth' // استخدام AuthLayout
+        },
     },
     {
         path: '/profile',
