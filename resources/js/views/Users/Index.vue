@@ -5,11 +5,11 @@
             <v-col cols="12" sm="6" md="3">
                 <v-card>
                     <v-card-text>
-                        <div class="d-flex align-center" :class="{ 'flex-row-reverse': !isRTL }">
-                            <v-avatar color="primary" size="56" :class="isRTL ? 'ms-4' : 'me-4'">
+                        <div class="stat-card-content">
+                            <v-avatar color="primary" size="56" class="stat-avatar">
                                 <v-icon size="32" color="white">mdi-account-group</v-icon>
                             </v-avatar>
-                            <div :class="isRTL ? 'text-right' : 'text-left'">
+                            <div class="stat-info">
                                 <div class="text-h5 font-weight-bold">{{ stats?.total_users || 0 }}</div>
                                 <div class="text-caption text-medium-emphasis">{{ t('users.totalUsers') }}</div>
                             </div>
@@ -21,11 +21,11 @@
             <v-col cols="12" sm="6" md="3">
                 <v-card>
                     <v-card-text>
-                        <div class="d-flex align-center" :class="{ 'flex-row-reverse': !isRTL }">
-                            <v-avatar color="success" size="56" :class="isRTL ? 'ms-4' : 'me-4'">
+                        <div class="stat-card-content">
+                            <v-avatar color="success" size="56" class="stat-avatar">
                                 <v-icon size="32" color="white">mdi-account-check</v-icon>
                             </v-avatar>
-                            <div :class="isRTL ? 'text-right' : 'text-left'">
+                            <div class="stat-info">
                                 <div class="text-h5 font-weight-bold">{{ stats?.active_users || 0 }}</div>
                                 <div class="text-caption text-medium-emphasis">{{ t('users.activeUsers') }}</div>
                             </div>
@@ -37,11 +37,11 @@
             <v-col cols="12" sm="6" md="3">
                 <v-card>
                     <v-card-text>
-                        <div class="d-flex align-center" :class="{ 'flex-row-reverse': !isRTL }">
-                            <v-avatar color="warning" size="56" :class="isRTL ? 'ms-4' : 'me-4'">
+                        <div class="stat-card-content">
+                            <v-avatar color="warning" size="56" class="stat-avatar">
                                 <v-icon size="32" color="white">mdi-account-clock</v-icon>
                             </v-avatar>
-                            <div :class="isRTL ? 'text-right' : 'text-left'">
+                            <div class="stat-info">
                                 <div class="text-h5 font-weight-bold">{{ stats?.inactive_users || 0 }}</div>
                                 <div class="text-caption text-medium-emphasis">{{ t('users.inactiveUsers') }}</div>
                             </div>
@@ -53,11 +53,11 @@
             <v-col cols="12" sm="6" md="3">
                 <v-card>
                     <v-card-text>
-                        <div class="d-flex align-center" :class="{ 'flex-row-reverse': !isRTL }">
-                            <v-avatar color="info" size="56" :class="isRTL ? 'ms-4' : 'me-4'">
+                        <div class="stat-card-content">
+                            <v-avatar color="info" size="56" class="stat-avatar">
                                 <v-icon size="32" color="white">mdi-shield-account</v-icon>
                             </v-avatar>
-                            <div :class="isRTL ? 'text-right' : 'text-left'">
+                            <div class="stat-info">
                                 <div class="text-h5 font-weight-bold">{{ roles.length }}</div>
                                 <div class="text-caption text-medium-emphasis">{{ t('users.totalRoles') }}</div>
                             </div>
@@ -91,7 +91,7 @@
                 ></v-text-field>
 
                 <!-- الفلترة -->
-                <v-menu location="bottom">
+                <v-menu location="bottom" :close-on-content-click="false">
                     <template v-slot:activator="{ props }">
                         <v-btn
                             v-bind="props"
@@ -136,7 +136,7 @@
                         <v-card-actions>
                             <v-spacer></v-spacer>
                             <v-btn @click="clearFilters" variant="text">{{ t('common.clear') }}</v-btn>
-                            <v-btn @click="applyFilters" color="primary">{{ t('common.apply') }}</v-btn>
+                            <v-btn @click="applyFiltersAndClose" color="primary">{{ t('common.apply') }}</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-menu>
@@ -145,9 +145,10 @@
                 <v-btn
                     color="primary"
                     @click="openCreateDialog"
+                    class="add-user-btn"
                 >
-                    <v-icon :start="!isRTL" :end="isRTL">mdi-plus</v-icon>
-                    {{ t('users.addNew') }}
+                    <v-icon class="btn-icon">mdi-plus</v-icon>
+                    <span>{{ t('users.addNew') }}</span>
                 </v-btn>
             </v-card-title>
 
@@ -352,6 +353,7 @@ const formDialog = ref(false);
 const viewDialog = ref(false);
 const deleteDialog = ref(false);
 const selectedUser = ref(null);
+const filterMenu = ref(false);
 
 const isRTL = computed(() => currentLocale.value.dir === 'rtl');
 
@@ -404,6 +406,11 @@ const handleSearch = () => {
 const applyFilters = () => {
     page.value = 1;
     loadUsers({ page: page.value, itemsPerPage: itemsPerPage.value });
+};
+
+// تطبيق الفلاتر وإغلاق القائمة
+const applyFiltersAndClose = () => {
+    applyFilters();
 };
 
 const clearFilters = () => {
@@ -475,6 +482,95 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* ============================================ */
+/* Float Helpers for RTL/LTR */
+/* ============================================ */
+[dir="rtl"] .float-start {
+    float: right !important;
+}
+
+[dir="rtl"] .float-end {
+    float: left !important;
+}
+
+[dir="ltr"] .float-start {
+    float: left !important;
+}
+
+[dir="ltr"] .float-end {
+    float: right !important;
+}
+
+.clearfix::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+/* ============================================ */
+/* Statistics Cards RTL */
+/* ============================================ */
+.stat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+[dir="rtl"] .stat-card-content {
+    flex-direction: row;
+}
+
+[dir="ltr"] .stat-card-content {
+    flex-direction: row;
+}
+
+[dir="rtl"] .stat-avatar {
+    order: 2;
+}
+
+[dir="ltr"] .stat-avatar {
+    order: 1;
+}
+
+[dir="rtl"] .stat-info {
+    order: 1;
+    text-align: right;
+}
+
+[dir="ltr"] .stat-info {
+    order: 2;
+    text-align: left;
+}
+
+/* ============================================ */
+/* Add Button RTL */
+/* ============================================ */
+.add-user-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+[dir="rtl"] .add-user-btn .btn-icon {
+    order: 2;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+[dir="rtl"] .add-user-btn span {
+    order: 1;
+}
+
+[dir="ltr"] .add-user-btn .btn-icon {
+    order: 1;
+    margin-right: 0;
+    margin-left: 0;
+}
+
+[dir="ltr"] .add-user-btn span {
+    order: 2;
+}
+
 /* ============================================ */
 /* RTL Table - عربي */
 /* ============================================ */

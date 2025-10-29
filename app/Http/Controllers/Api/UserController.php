@@ -25,8 +25,9 @@ class UserController extends Controller
         }
 
         // الفلترة حسب الحالة
-        if ($request->has('is_active')) {
-            $query->where('is_active', $request->is_active);
+       if ($request->has('is_active') && $request->is_active !== null && $request->is_active !== '') {
+            $isActive = filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN);
+            $query->where('is_active', $isActive);
         }
 
         // الفلترة حسب الدور
