@@ -54,5 +54,85 @@
         "required": "This field is required",
         "email": "Please enter a valid email",
         "minLength": "Must be at least {length} characters"
-    }
+    },
+        "app": {
+            "title": "E-Commerce Store",
+            "copyright": "© 2024 All Rights Reserved"
+        },
+        "nav": {
+            "home": "Home",
+            "users": "Users",
+            "roles": "Roles",
+            "language": "Language"
+        },
+        "common": {
+            "search": "Search",
+            "filters": "Filters",
+            "apply": "Apply",
+            "clear": "Clear",
+            "view": "View",
+            "edit": "Edit",
+            "delete": "Delete",
+            "cancel": "Cancel",
+            "save": "Save",
+            "create": "Create",
+            "close": "Close",
+            "active": "Active",
+            "inactive": "Inactive",
+            "actions": "Actions",
+            "createdAt": "Created At",
+            "selectAll": "Select All",
+            "deselectAll": "Deselect All"
+        },
+        "users": {
+            "title": "User Management",
+            "addNew": "Add User",
+            "editUser": "Edit User",
+            "userDetails": "User Details",
+            "name": "Name",
+            "email": "Email",
+            "phone": "Phone",
+            "password": "Password",
+            "newPassword": "New Password",
+            "confirmPassword": "Confirm Password",
+            "leaveBlankToKeep": "Leave blank to keep current",
+            "role": "Role",
+            "roles": "Roles",
+            "status": "Status",
+            "isActive": "Active",
+            "lastLogin": "Last Login",
+            "neverLoggedIn": "Never logged in",
+            "createdAt": "Created At",
+            "directPermissions": "Direct Permissions",
+            "activate": "Activate",
+            "deactivate": "Deactivate",
+            "confirmDelete": "Confirm Delete",
+            "confirmDeleteMessage": "Are you sure you want to delete {name}?",
+            "totalUsers": "Total Users",
+            "activeUsers": "Active Users",
+            "inactiveUsers": "Inactive Users",
+            "totalRoles": "Total Roles"
+        },
+        "roles": {
+            "title": "Role Management",
+            "subtitle": "Manage roles and permissions in the system",
+            "addNew": "Add New Role",
+            "addNewDescription": "Create a new role and customize permissions",
+            "editRole": "Edit Role",
+            "roleDetails": "Role Details",
+            "name": "Role Name",
+            "technicalName": "Technical Name",
+            "permissions": "Permissions",
+            "users": "Users",
+            "viewPermissions": "View Permissions",
+            "confirmDelete": "Confirm Delete Role",
+            "confirmDeleteMessage": "Are you sure you want to delete {name}?",
+            "createdAt": "Created At"
+        },
+        "validation": {
+            "required": "This field is required",
+            "email": "Please enter a valid email",
+            "minLength": "Must be at least {length} characters",
+            "passwordMatch": "Password does not match"
+        }
 }

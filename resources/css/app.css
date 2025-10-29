@@ -270,3 +270,14 @@ p, span, div {
 .v-app-bar {
     z-index: 1006 !important;
 }
+
+/* Text direction حسب اللغة */
+[dir="rtl"] .v-list-subheader {
+    direction: rtl;
+  text-align: right;
+}
+
+[dir="ltr"] .v-list-subheader {
+    direction: ltr;
+  text-align: left;
+}

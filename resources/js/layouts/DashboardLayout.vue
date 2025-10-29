@@ -23,7 +23,7 @@
       <v-btn icon @click.stop="toggleUserMenu" ref="userMenuBtn">
         <v-avatar color="white" size="36">
           <span class="text-primary font-weight-bold">
-            {{ user?.initials }}
+            {{ userInitials }}
           </span>
         </v-avatar>
       </v-btn>
@@ -109,7 +109,7 @@
                 <template v-slot:prepend>
                   <v-avatar color="primary" size="50">
                     <span class="text-white font-weight-bold text-h6">
-                      {{ user?.initials }}
+                      {{ userInitials }}
                     </span>
                   </v-avatar>
                 </template>
@@ -146,29 +146,24 @@
       </transition>
     </teleport>
 
-    <!-- Logout Confirmation Dialog - محسّن -->
+    <!-- Logout Confirmation Dialog -->
     <v-dialog v-model="logoutDialog" max-width="450" persistent>
       <v-card rounded="xl" elevation="8">
-        <!-- Header بدون لون -->
         <v-card-text class="text-center pt-8 pb-4">
-          <!-- أيقونة جميلة -->
           <div class="mb-4">
             <v-avatar color="error" size="80" class="elevation-4">
               <v-icon size="50" color="white">mdi-logout-variant</v-icon>
             </v-avatar>
           </div>
 
-          <!-- العنوان -->
           <h2 class="text-h4 font-weight-bold mb-3">
             {{ t("auth.logout.title") }}
           </h2>
 
-          <!-- الرسالة -->
           <p class="text-h6 text-medium-emphasis mb-2">
             {{ t("auth.logout.message") }}
           </p>
 
-          <!-- معلومات إضافية -->
           <v-card variant="tonal" color="info" class="mt-4 pa-3">
             <div class="d-flex align-center justify-center">
               <v-icon color="info" class="me-2">mdi-information</v-icon>
@@ -177,7 +172,6 @@
           </v-card>
         </v-card-text>
 
-        <!-- الأزرار -->
         <v-card-actions class="pa-6 pt-2">
           <v-row no-gutters>
             <v-col cols="6" class="pe-2">
@@ -224,11 +218,13 @@
         <v-list-item class="pa-3 bg-primary">
           <template v-slot:prepend>
             <v-avatar color="white" size="42">
-              <v-icon color="primary" size="24">mdi-account</v-icon>
+              <span class="text-primary font-weight-bold">
+                {{ userInitials }}
+              </span>
             </v-avatar>
           </template>
           <v-list-item-title class="text-white font-weight-bold">
-            {{ user?.first_name }}
+            {{ user?.name }}
           </v-list-item-title>
           <v-list-item-subtitle class="text-white text-caption">
             {{ user?.email }}
@@ -238,6 +234,7 @@
 
       <!-- Navigation Items -->
       <v-list nav density="comfortable" class="pa-3">
+        <!-- الرئيسية -->
         <v-list-item
           prepend-icon="mdi-home"
           :title="t('nav.home')"
@@ -249,10 +246,11 @@
         >
         </v-list-item>
 
+        <!-- التصنيفات -->
         <v-list-item
-          prepend-icon="mdi-information"
-          :title="t('nav.about')"
-          to="/about"
+          prepend-icon="mdi-folder-multiple"
+          :title="t('nav.categories')"
+          to="/categories"
           rounded="lg"
           color="primary"
           class="mb-2"
@@ -260,10 +258,30 @@
         >
         </v-list-item>
 
+        <v-divider class="my-3"></v-divider>
+
+        <!-- إدارة النظام -->
+        <v-list-subheader  class="text-caption font-weight-bold text-medium-emphasis px-0">
+          {{ t('nav.systemManagement') }}
+        </v-list-subheader>
+
+        <!-- المستخدمون -->
         <v-list-item
-          prepend-icon="mdi-account"
-          :title="t('nav.profile')"
-          to="/profile"
+          prepend-icon="mdi-account-group"
+          :title="t('nav.users')"
+          to="/users"
+          rounded="lg"
+          color="primary"
+          class="mb-2"
+          active-class="bg-primary text-white"
+        >
+        </v-list-item>
+
+        <!-- الأدوار -->
+        <v-list-item
+          prepend-icon="mdi-shield-account"
+          :title="t('nav.roles')"
+          to="/roles"
           rounded="lg"
           color="primary"
           class="mb-2"
@@ -277,7 +295,7 @@
         <div class="pa-3 text-center">
           <v-chip color="success" variant="tonal" size="small">
             <v-icon start size="small">mdi-check-circle</v-icon>
-            متصل
+            {{ t('nav.online') }}
           </v-chip>
         </div>
       </template>
@@ -298,7 +316,9 @@
     >
       {{ snackbar.message }}
       <template v-slot:actions>
-        <v-btn variant="text" @click="snackbar.show = false"> إغلاق </v-btn>
+        <v-btn variant="text" @click="snackbar.show = false">
+          {{ t('common.close') }}
+        </v-btn>
       </template>
     </v-snackbar>
 
@@ -315,7 +335,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { useLanguage } from "../composables/useLanguage";
 import { useAuth } from "../composables/useAuth";
@@ -344,13 +364,23 @@ const {
 const { user, loading, logout } = useAuth();
 const { snackbar, showSuccess } = useSnackbar();
 
+// Computed للحصول على الأحرف الأولى من الاسم
+const userInitials = computed(() => {
+  if (!user.value?.name) return '?';
+  
+  const names = user.value.name.trim().split(' ');
+  if (names.length === 1) {
+    return names[0].charAt(0).toUpperCase();
+  }
+  return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+});
+
 // Language Menu Functions
 const toggleLanguageMenu = () => {
   if (!showLanguageMenu.value) {
     calculateLanguageMenuPosition();
   }
   showLanguageMenu.value = !showLanguageMenu.value;
-  // إغلاق قائمة المستخدم إذا كانت مفتوحة
   if (showLanguageMenu.value) {
     showUserMenu.value = false;
   }
@@ -379,7 +409,6 @@ const toggleUserMenu = () => {
     calculateUserMenuPosition();
   }
   showUserMenu.value = !showUserMenu.value;
-  // إغلاق قائمة اللغة إذا كانت مفتوحة
   if (showUserMenu.value) {
     showLanguageMenu.value = false;
   }

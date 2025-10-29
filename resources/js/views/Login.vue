@@ -95,7 +95,7 @@
                                         variant="outlined"
                                         color="primary"
                                         :error-messages="errors.email"
-                                        placeholder="admin@example.com"
+                                        placeholder="superadmin@example.com"
                                         class="modern-input"
                                         hide-details="auto"
                                         density="comfortable"

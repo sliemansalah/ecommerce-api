@@ -1,16 +1,4 @@
 {
-    "app": {
-        "title": "متجر إلكتروني",
-        "copyright": "© 2024 جميع الحقوق محفوظة"
-    },
-    "nav": {
-        "home": "الرئيسية",
-        "about": "من نحن",
-        "language": "اللغة",
-        "login": "تسجيل الدخول",
-        "logout": "تسجيل الخروج",
-        "profile": "الملف الشخصي"
-    },
     "auth": {
         "login": {
             "title": "تسجيل الدخول",
@@ -50,9 +38,90 @@
         "title": "من نحن",
         "description": "نحن منصة للتجارة الإلكترونية نسعى لتقديم أفضل تجربة تسوق"
     },
+    "app": {
+        "title": "متجر إلكتروني",
+        "copyright": "© 2024 جميع الحقوق محفوظة"
+    },
+    "nav": {
+        "home": "الرئيسية",
+        "users": "المستخدمون",
+        "roles": "الأدوار",
+        "language": "اللغة",
+        "about": "من نحن",
+        "login": "تسجيل الدخول",
+        "logout": "تسجيل الخروج",
+        "profile": "الملف الشخصي",
+        "systemManagement": "إدارة النظام",
+        "categories": "التصنيفات"
+    },
+    "common": {
+        "search": "بحث",
+        "filters": "الفلاتر",
+        "apply": "تطبيق",
+        "clear": "مسح",
+        "view": "عرض",
+        "edit": "تعديل",
+        "delete": "حذف",
+        "cancel": "إلغاء",
+        "save": "حفظ",
+        "create": "إنشاء",
+        "close": "إغلاق",
+        "active": "نشط",
+        "inactive": "غير نشط",
+        "actions": "الإجراءات",
+        "createdAt": "تاريخ الإنشاء",
+        "selectAll": "اختيار الكل",
+        "deselectAll": "إلغاء اختيار الكل"
+    },
+    "users": {
+        "title": "إدارة المستخدمين",
+        "addNew": "إضافة مستخدم",
+        "editUser": "تعديل مستخدم",
+        "userDetails": "تفاصيل المستخدم",
+        "name": "الاسم",
+        "email": "البريد الإلكتروني",
+        "phone": "رقم الهاتف",
+        "password": "كلمة المرور",
+        "newPassword": "كلمة المرور الجديدة",
+        "confirmPassword": "تأكيد كلمة المرور",
+        "leaveBlankToKeep": "اتركه فارغاً للإبقاء على القديمة",
+        "role": "الدور",
+        "roles": "الأدوار",
+        "status": "الحالة",
+        "isActive": "نشط",
+        "lastLogin": "آخر تسجيل دخول",
+        "neverLoggedIn": "لم يسجل دخول",
+        "createdAt": "تاريخ الإنشاء",
+        "directPermissions": "صلاحيات مباشرة",
+        "activate": "تفعيل",
+        "deactivate": "تعطيل",
+        "confirmDelete": "تأكيد الحذف",
+        "confirmDeleteMessage": "هل أنت متأكد من حذف المستخدم {name}؟",
+        "totalUsers": "إجمالي المستخدمين",
+        "activeUsers": "المستخدمون النشطون",
+        "inactiveUsers": "المستخدمون غير النشطين",
+        "totalRoles": "إجمالي الأدوار"
+    },
+    "roles": {
+        "title": "إدارة الأدوار",
+        "subtitle": "إدارة الأدوار والصلاحيات في النظام",
+        "addNew": "إضافة دور جديد",
+        "addNewDescription": "قم بإنشاء دور جديد وتخصيص الصلاحيات",
+        "editRole": "تعديل دور",
+        "roleDetails": "تفاصيل الدور",
+        "name": "اسم الدور",
+        "technicalName": "الاسم التقني",
+        "permissions": "الصلاحيات",
+        "users": "المستخدمون",
+        "viewPermissions": "عرض الصلاحيات",
+        "confirmDelete": "تأكيد حذف الدور",
+        "confirmDeleteMessage": "هل أنت متأكد من حذف الدور {name}؟",
+        "createdAt": "تاريخ الإنشاء"
+    },
     "validation": {
         "required": "هذا الحقل مطلوب",
         "email": "يرجى إدخال بريد إلكتروني صحيح",
-        "minLength": "يجب أن يحتوي على {length} أحرف على الأقل"
+        "minLength": "يجب أن يحتوي على {length} أحرف على الأقل",
+        "passwordMatch": "كلمة المرور غير متطابقة"
     }
 }
